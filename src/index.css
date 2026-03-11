@@ -3,6 +3,12 @@
 
 @theme {
   --font-sans: "Press Start 2P", system-ui, sans-serif;
+  --animate-float-80s: float80s 3s ease-in-out infinite;
+
+  @keyframes float80s {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
 }
 
 body {
