@@ -105,7 +105,7 @@ const LEVELS: Level[] = [
     specialItems: [
       { x: 1400, y: 500, type: 'steak', collected: false },
     ],
-    goal: { x: 1800, y: 450, width: 60, height: 100 }
+    goal: { x: 1800, y: 500, width: 120, height: 50 }
   },
   {
     platforms: [
@@ -115,7 +115,7 @@ const LEVELS: Level[] = [
       { x: 500, y: 450, width: 120, height: 20, color: '#2d5a27', type: 'static' },
       { x: 700, y: 350, width: 150, height: 20, color: '#2d5a27', type: 'horizontal', range: 300, speed: 3, initialX: 700, initialY: 350 },
       { x: 1100, y: 250, width: 120, height: 20, color: '#2d5a27', type: 'static' },
-      { x: 1300, y: 400, width: 120, height: 20, color: '#2d5a27', type: 'vertical', range: 150, speed: 2, initialX: 1300, initialY: 400 },
+      { x: 1300, y: 400, width: 120, height: 20, color: '#2d5a27', type: 'vertical', range: 120, speed: 2, initialX: 1300, initialY: 400 },
       { x: 1500, y: 200, width: 150, height: 20, color: '#2d5a27', type: 'static' },
       { x: 1800, y: 350, width: 150, height: 20, color: '#2d5a27', type: 'horizontal', range: 200, speed: 2, initialX: 1800, initialY: 350 },
     ],
@@ -132,11 +132,11 @@ const LEVELS: Level[] = [
       { x: 600, y: 200, type: 'coke', collected: false },
       { x: 1900, y: 200, type: 'iphone', collected: false },
     ],
-    goal: { x: 2300, y: 450, width: 60, height: 100 }
+    goal: { x: 2300, y: 500, width: 120, height: 50 }
   },
   {
     platforms: [
-      { x: 0, y: 550, width: 3000, height: 50, color: '#4d2d18', type: 'static' },
+      { x: 0, y: 550, width: 4000, height: 50, color: '#4d2d18', type: 'static' },
       { x: 200, y: 400, width: 100, height: 20, color: '#2d5a27', type: 'static' },
       { x: 400, y: 300, width: 100, height: 20, color: '#2d5a27', type: 'vertical', range: 200, speed: 2.5, initialX: 400, initialY: 300 },
       { x: 700, y: 200, width: 100, height: 20, color: '#2d5a27', type: 'horizontal', range: 300, speed: 3.5, initialX: 700, initialY: 200 },
@@ -159,7 +159,7 @@ const LEVELS: Level[] = [
     specialItems: [
       { x: 1400, y: 100, type: 'dollar', collected: false },
     ],
-    goal: { x: 2800, y: 450, width: 60, height: 100 }
+    goal: { x: 2800, y: 500, width: 120, height: 50 }
   }
 ];
 
@@ -175,7 +175,7 @@ export default function App() {
   // Audio Context for retro sounds
   const audioCtx = useRef<AudioContext | null>(null);
 
-  const playSound = (type: 'jump' | 'collect' | 'victory') => {
+  const playSound = (type: 'jump' | 'collect' | 'victory' | 'bounce' | 'engine') => {
     if (!audioCtx.current) {
       audioCtx.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
@@ -207,15 +207,81 @@ export default function App() {
       osc.stop(now + 0.15);
     } else if (type === 'victory') {
       osc.type = 'triangle';
-      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50]; // C5, E5, G5, C6, G5, C6
       notes.forEach((freq, i) => {
-        osc.frequency.setValueAtTime(freq, now + i * 0.1);
+        osc.frequency.setValueAtTime(freq, now + i * 0.08);
       });
       gain.gain.setValueAtTime(0.1, now);
-      gain.gain.linearRampToValueAtTime(0.1, now + 0.3);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+      gain.gain.linearRampToValueAtTime(0.1, now + 0.4);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
       osc.start(now);
-      osc.stop(now + 0.5);
+      osc.stop(now + 0.6);
+    } else if (type === 'bounce') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    } else if (type === 'engine') {
+      // Subtle, smooth engine "Purr"
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      
+      // Soft noise for texture
+      const bufferSize = ctx.sampleRate * 1.2;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = 'lowpass';
+      noiseFilter.frequency.setValueAtTime(300, now);
+      
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0, now);
+      noiseGain.gain.linearRampToValueAtTime(0.03, now + 0.1);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      
+      noise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      
+      // Use Triangle waves for a much smoother, less aggressive sound
+      osc.type = 'triangle';
+      osc2.type = 'triangle';
+      
+      // Mid-low frequencies that are pleasant
+      osc.frequency.setValueAtTime(80, now);
+      osc.frequency.linearRampToValueAtTime(120, now + 0.4);
+      osc.frequency.linearRampToValueAtTime(100, now + 1.2);
+      
+      osc2.frequency.setValueAtTime(82, now); // Slight detune for warmth
+      osc2.frequency.linearRampToValueAtTime(122, now + 0.4);
+      osc2.frequency.linearRampToValueAtTime(102, now + 1.2);
+      
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.08, now + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      
+      gain2.gain.setValueAtTime(0, now);
+      gain2.gain.linearRampToValueAtTime(0.06, now + 0.1);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      
+      osc.connect(gain);
+      osc2.connect(gain2);
+      
+      osc.start(now);
+      osc2.start(now);
+      noise.start(now);
+      
+      osc.stop(now + 1.2);
+      osc2.stop(now + 1.2);
+      noise.stop(now + 1.2);
     }
   };
 
@@ -237,6 +303,8 @@ export default function App() {
       up: false,
       upPressed: false,
     },
+    jumpBuffer: 0,
+    coyoteTime: 0,
     platforms: JSON.parse(JSON.stringify(LEVELS[0].platforms)) as Platform[],
     bones: JSON.parse(JSON.stringify(LEVELS[0].bones)) as Bone[],
     specialItems: JSON.parse(JSON.stringify(LEVELS[0].specialItems)) as SpecialItem[],
@@ -260,7 +328,15 @@ export default function App() {
       otherDogX: 0,
       otherDogY: 0,
       otherDogVy: 0,
+      soundCount: 0,
     },
+    goalAnimation: {
+      active: false,
+      timer: 0,
+      shake: 0,
+      driveOff: 0,
+      exhaust: [] as {x: number, y: number, size: number, life: number}[],
+    }
   });
 
   // Update player stats when character changes
@@ -285,7 +361,8 @@ export default function App() {
     gameState.current.player.vy = 0;
     gameState.current.cameraX = 0;
     gameState.current.currentLevelIdx = currentLevelIdx;
-    gameState.current.victoryAnimation = { active: false, timer: 0, otherDogX: 0, otherDogY: 0, otherDogVy: 0 };
+    gameState.current.victoryAnimation = { active: false, timer: 0, otherDogX: 0, otherDogY: 0, otherDogVy: 0, soundCount: 0 };
+    gameState.current.goalAnimation = { active: false, timer: 0, shake: 0, driveOff: 0, exhaust: [] };
   }, [currentLevelIdx]);
 
   useEffect(() => {
@@ -320,6 +397,7 @@ export default function App() {
     window.addEventListener('keyup', handleKeyUp);
 
     const update = () => {
+      if (gameOver) return;
       const { player, keys, platforms, bones, goal, floatingTexts, gravity, friction, tennisBalls, distraction, victoryAnimation } = gameState.current;
       const stats = STATS[character];
       const levelIdx = gameState.current.currentLevelIdx;
@@ -333,6 +411,10 @@ export default function App() {
         if (gameState.current.levelTimer % 0.6 < 0.02) {
           player.vy = -10;
           victoryAnimation.otherDogVy = -10;
+          if (victoryAnimation.soundCount < 3) {
+            playSound('victory');
+            victoryAnimation.soundCount++;
+          }
         }
         
         // Gravity for other dog
@@ -423,7 +505,8 @@ export default function App() {
           
           // Remove ball
           tennisBalls.splice(i, 1);
-          floatingTexts.push({ x: player.x, y: player.y - 20, text: '¡PELOTA!', life: 1.0 });
+          floatingTexts.push({ x: player.x, y: player.y - 20, text: '¡PELOTA!', life: 2.0 });
+          playSound('bounce');
           continue;
         }
 
@@ -471,7 +554,8 @@ export default function App() {
       }
 
       // Horizontal movement
-      const accel = stats.speed * 0.18;
+      const isMobile = window.innerWidth < 768;
+      const accel = stats.speed * (isMobile ? 0.22 : 0.18);
       
       if (distraction.active) {
         // Distraction pull is strong, but player can still influence it slightly
@@ -491,18 +575,37 @@ export default function App() {
       // Vertical movement
       player.vy += gravity;
 
+      // Coyote time update
+      if (player.grounded) {
+        gameState.current.coyoteTime = 6; // 6 frames of grace
+      } else {
+        if (gameState.current.coyoteTime > 0) gameState.current.coyoteTime--;
+      }
+
+      // Jump buffer update
+      if (gameState.current.jumpBuffer > 0) gameState.current.jumpBuffer--;
+
       // Jump logic (Double for Chiara, Triple for Brego)
       const maxJumps = character === 'Brego' ? 3 : 2;
-      if (keys.upPressed) {
-        if (player.grounded) {
+      
+      if (keys.upPressed || gameState.current.jumpBuffer > 0) {
+        const canJump = player.grounded || gameState.current.coyoteTime > 0;
+        
+        if (canJump) {
           player.vy = stats.jumpForce;
           player.grounded = false;
           player.jumpCount = 1;
+          gameState.current.coyoteTime = 0;
+          gameState.current.jumpBuffer = 0;
           playSound('jump');
-        } else if (player.jumpCount < maxJumps) {
+        } else if (keys.upPressed && player.jumpCount < maxJumps) {
+          // Double/Triple jump doesn't use buffer, it must be an active press
           player.vy = stats.jumpForce * 0.9;
           player.jumpCount++;
           playSound('jump');
+        } else if (keys.upPressed && !player.grounded) {
+          // Buffer the jump if we pressed up but couldn't jump yet
+          gameState.current.jumpBuffer = 8;
         }
         keys.upPressed = false;
       }
@@ -513,10 +616,11 @@ export default function App() {
 
       // Collision detection with platforms
       player.grounded = false;
+      const hitboxPadding = 4; // Forgiving hitbox
       for (const plat of platforms) {
         if (
-          player.x < plat.x + plat.width &&
-          player.x + player.width > plat.x &&
+          player.x + hitboxPadding < plat.x + plat.width &&
+          player.x + player.width - hitboxPadding > plat.x &&
           player.y < plat.y + plat.height &&
           player.y + player.height > plat.y
         ) {
@@ -540,7 +644,7 @@ export default function App() {
             bone.collected = true;
             gameState.current.score += 10;
             setScore(gameState.current.score);
-            floatingTexts.push({ x: bone.x, y: bone.y, text: '+10', life: 1.0 });
+            floatingTexts.push({ x: bone.x, y: bone.y, text: '+10', life: 2.0 });
             playSound('collect');
           }
         }
@@ -563,7 +667,7 @@ export default function App() {
             
             gameState.current.score += points;
             setScore(gameState.current.score);
-            floatingTexts.push({ x: item.x, y: item.y, text, life: 1.5 });
+            floatingTexts.push({ x: item.x, y: item.y, text, life: 2.5 });
             playSound('collect');
           }
         }
@@ -575,19 +679,83 @@ export default function App() {
         player.x + player.width > goal.x &&
         player.y < goal.y + goal.height &&
         player.y + player.height > goal.y &&
+        !gameState.current.goalAnimation.active &&
         !gameState.current.victoryAnimation.active
       ) {
-        if (gameState.current.currentLevelIdx < LEVELS.length - 1) {
-          setCurrentLevelIdx(prev => prev + 1);
-          playSound('victory');
+        gameState.current.goalAnimation.active = true;
+        gameState.current.goalAnimation.timer = 120; // 2 seconds
+        playSound('engine');
+        playSound('victory');
+      }
+
+      // Update goal animation
+      if (gameState.current.goalAnimation.active) {
+        const ga = gameState.current.goalAnimation;
+        ga.timer--;
+        
+        // Shake effect
+        if (ga.timer > 60) {
+          ga.shake = Math.sin(ga.timer * 0.5) * 3;
+          // Exhaust particles
+          if (ga.timer % 5 === 0) {
+            ga.exhaust.push({
+              x: goal.x - 10,
+              y: goal.y + 30,
+              size: 5 + Math.random() * 10,
+              life: 1.0
+            });
+          }
         } else {
-          // Trigger victory animation for Level 3
-          gameState.current.victoryAnimation.active = true;
-          gameState.current.victoryAnimation.timer = 180; // 3 seconds
-          gameState.current.victoryAnimation.otherDogX = goal.x + goal.width + 20;
-          const otherType = character === 'Chiara' ? 'Brego' : 'Chiara';
-          gameState.current.victoryAnimation.otherDogY = goal.y + goal.height - STATS[otherType].height;
-          playSound('victory');
+          ga.shake = 0;
+          const isLastLevel = gameState.current.currentLevelIdx === LEVELS.length - 1;
+          
+          if (isLastLevel) {
+            // Drive to the other dog
+            const targetX = goal.x + 400;
+            if (goal.x + ga.driveOff < targetX) {
+              ga.driveOff += 8;
+            }
+          } else {
+            ga.driveOff += 15; // Drive off screen
+          }
+
+          // Update player position to match car so camera follows
+          player.x = goal.x + ga.driveOff + 60;
+          player.y = goal.y;
+
+          // More exhaust when driving off
+          ga.exhaust.push({
+            x: goal.x - 10 + ga.driveOff,
+            y: goal.y + 30,
+            size: 8 + Math.random() * 12,
+            life: 1.0
+          });
+        }
+
+        // Update exhaust particles
+        ga.exhaust.forEach(p => {
+          p.x -= 2;
+          p.y -= 1;
+          p.life -= 0.02;
+        });
+        ga.exhaust = ga.exhaust.filter(p => p.life > 0);
+
+        if (ga.timer <= 0) {
+          if (gameState.current.currentLevelIdx < LEVELS.length - 1) {
+            setCurrentLevelIdx(prev => prev + 1);
+          } else {
+            // Trigger victory animation for Level 3
+            gameState.current.victoryAnimation.active = true;
+            gameState.current.victoryAnimation.timer = 300; // Longer celebration
+            gameState.current.victoryAnimation.otherDogX = goal.x + 600;
+            const otherType = character === 'Chiara' ? 'Brego' : 'Chiara';
+            gameState.current.victoryAnimation.otherDogY = goal.y + goal.height - STATS[otherType].height;
+            
+            // Position player dog next to other dog for celebration
+            player.x = gameState.current.victoryAnimation.otherDogX - 60;
+            player.y = goal.y + goal.height - player.height;
+          }
+          ga.active = false;
         }
       }
 
@@ -608,7 +776,7 @@ export default function App() {
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const { player, platforms, bones, goal, floatingTexts, cameraX, tennisBalls, victoryAnimation } = gameState.current;
+      const { player, platforms, bones, goal, floatingTexts, cameraX, tennisBalls, victoryAnimation, goalAnimation } = gameState.current;
       const stats = STATS[character];
 
       const drawDog = (x: number, y: number, width: number, height: number, type: CharacterType, direction: number) => {
@@ -688,17 +856,120 @@ export default function App() {
       drawCloud(2200, 150);
       drawCloud(2600, 80);
 
-      // Draw Goal (House/Finish)
-      ctx.fillStyle = '#8b4513';
-      ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
-      ctx.fillStyle = '#ff0000';
+      // Exhaust particles (World Space)
+      goalAnimation.exhaust.forEach(p => {
+        ctx.fillStyle = `rgba(150, 150, 150, ${p.life})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw Goal (Ferrari F1 Car - Facing Right)
+      ctx.save();
+      ctx.translate(goal.x + goalAnimation.driveOff, goal.y + goalAnimation.shake);
+
+      // Draw Dog inside the car if animation is active
+      if (goalAnimation.active) {
+        ctx.save();
+        // Position dog in the cockpit - slightly adjusted for better fit
+        ctx.translate(60, 18);
+        // Scale down the dog to fit in the car
+        ctx.scale(0.5, 0.5);
+        drawDog(-STATS[character].width / 2, -STATS[character].height / 2, STATS[character].width, STATS[character].height, character, 1);
+        ctx.restore();
+      }
+      
+      // Chassis (Darker Ferrari Red)
+      ctx.fillStyle = '#991b1b'; // Darker Ferrari Red
+      // Main body
+      ctx.fillRect(10, 25, 100, 15);
+      // Cockpit / Engine cover (Flipped)
       ctx.beginPath();
-      ctx.moveTo(goal.x - 10, goal.y);
-      ctx.lineTo(goal.x + goal.width / 2, goal.y - 40);
-      ctx.lineTo(goal.x + goal.width + 10, goal.y);
+      ctx.moveTo(30, 25);
+      ctx.lineTo(40, 10);
+      ctx.lineTo(70, 10);
+      ctx.lineTo(80, 25);
       ctx.fill();
-      ctx.fillStyle = '#ffd700';
-      ctx.fillRect(goal.x + 15, goal.y + 40, 30, 60); // Door
+      
+      // Rear Wing (Now on the left)
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(-5, 5, 25, 5); // Wing top
+      ctx.fillRect(5, 5, 5, 30); // Wing support
+      ctx.fillStyle = '#991b1b';
+      ctx.fillRect(-5, 2, 25, 3);
+      
+      // Front Wing (Now on the right)
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(100, 35, 30, 6);
+      ctx.fillStyle = '#991b1b';
+      ctx.fillRect(100, 32, 30, 3);
+      
+      // Wheels (Flipped positions)
+      const wheelVib = goalAnimation.active ? Math.sin(Date.now() / 20) * 1 : 0;
+      const wheelRot = goalAnimation.active ? (Date.now() / 50) : 0;
+      
+      ctx.fillStyle = '#1a1a1a';
+      // Rear wheel (Left)
+      ctx.save();
+      ctx.translate(25, 40 + wheelVib);
+      ctx.rotate(wheelRot);
+      ctx.beginPath();
+      ctx.arc(0, 0, 14, 0, Math.PI * 2);
+      ctx.fill();
+      // Rim detail
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-14, 0); ctx.lineTo(14, 0);
+      ctx.moveTo(0, -14); ctx.lineTo(0, 14);
+      ctx.stroke();
+      ctx.restore();
+
+      // Front wheel (Right)
+      ctx.save();
+      ctx.translate(100, 40 + wheelVib);
+      ctx.rotate(wheelRot);
+      ctx.beginPath();
+      ctx.arc(0, 0, 12, 0, Math.PI * 2);
+      ctx.fill();
+      // Rim detail
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-12, 0); ctx.lineTo(12, 0);
+      ctx.moveTo(0, -12); ctx.lineTo(0, 12);
+      ctx.stroke();
+      ctx.restore();
+      
+      // Rims (Yellow)
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath();
+      ctx.arc(25, 40 + wheelVib, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(100, 40 + wheelVib, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Ferrari Logo (Yellow Shield - Flipped position slightly)
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath();
+      ctx.moveTo(52, 15);
+      ctx.lineTo(60, 15);
+      ctx.lineTo(56, 22);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Driver Helmet (Facing Right) - Only if dog is not inside
+      if (!goalAnimation.active) {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(65, 12, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000000'; // Visor
+        ctx.fillRect(65, 10, 7, 3);
+      }
+      
+      ctx.restore();
 
       // Draw Platforms
       for (const plat of platforms) {
@@ -858,14 +1129,18 @@ export default function App() {
       }
 
       // Draw Player
-      const dir = player.vx >= 0 ? 1 : -1;
-      drawDog(player.x, player.y, player.width, player.height, character, dir);
+      if (!goalAnimation.active) {
+        const dir = player.vx >= 0 ? 1 : -1;
+        drawDog(player.x, player.y, player.width, player.height, character, dir);
+      }
 
-      // Draw Other Dog during Victory Animation
-      if (victoryAnimation.active) {
+      // Draw Other Dog during Victory Animation or final goal animation
+      if (victoryAnimation.active || (gameState.current.currentLevelIdx === LEVELS.length - 1 && goalAnimation.active)) {
         const otherType = character === 'Chiara' ? 'Brego' : 'Chiara';
         const otherStats = STATS[otherType];
-        drawDog(victoryAnimation.otherDogX, victoryAnimation.otherDogY, otherStats.width, otherStats.height, otherType, -1);
+        const otherX = victoryAnimation.active ? victoryAnimation.otherDogX : goal.x + 600;
+        const otherY = victoryAnimation.active ? victoryAnimation.otherDogY : goal.y + goal.height - otherStats.height;
+        drawDog(otherX, otherY, otherStats.width, otherStats.height, otherType, -1);
       }
 
       ctx.restore(); // Restore from camera transform
@@ -926,13 +1201,20 @@ export default function App() {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
-    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
-    
-    // Tap to jump
-    if (!gameState.current.keys.up) {
-      gameState.current.keys.upPressed = true;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const touchX = touch.clientX - rect.left;
+    const isRightSide = touchX > rect.width / 2;
+
+    if (isRightSide) {
+      // Right side is for jumping
+      if (!gameState.current.keys.up) {
+        gameState.current.keys.upPressed = true;
+      }
+      gameState.current.keys.up = true;
+    } else {
+      // Left side is for movement
+      touchStartPos.current = { x: touch.clientX, y: touch.clientY };
     }
-    gameState.current.keys.up = true;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -940,7 +1222,8 @@ export default function App() {
     const touch = e.touches[0];
     const dx = touch.clientX - touchStartPos.current.x;
     
-    const threshold = 20;
+    // Sensitivity adjustment for mobile
+    const threshold = 15; 
     if (dx > threshold) {
       gameState.current.keys.right = true;
       gameState.current.keys.left = false;
@@ -953,27 +1236,64 @@ export default function App() {
     }
   };
 
-  const handleTouchEnd = () => {
-    touchStartPos.current = null;
-    gameState.current.keys.left = false;
-    gameState.current.keys.right = false;
-    gameState.current.keys.up = false;
-    gameState.current.keys.upPressed = false;
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    // If all touches are gone, reset everything
+    if (e.touches.length === 0) {
+      touchStartPos.current = null;
+      gameState.current.keys.left = false;
+      gameState.current.keys.right = false;
+      gameState.current.keys.up = false;
+      gameState.current.keys.upPressed = false;
+    } else {
+      // If some touches remain, check if the movement touch is still there
+      // This is a bit complex with React events, so we'll just check if 
+      // any touch is on the left side. If not, reset movement.
+      let movementTouchExists = false;
+      const rect = e.currentTarget.getBoundingClientRect();
+      for (let i = 0; i < e.touches.length; i++) {
+        const touchX = e.touches[i].clientX - rect.left;
+        if (touchX <= rect.width / 2) {
+          movementTouchExists = true;
+          break;
+        }
+      }
+      
+      if (!movementTouchExists) {
+        touchStartPos.current = null;
+        gameState.current.keys.left = false;
+        gameState.current.keys.right = false;
+      }
+
+      // Check for jump touch
+      let jumpTouchExists = false;
+      for (let i = 0; i < e.touches.length; i++) {
+        const touchX = e.touches[i].clientX - rect.left;
+        if (touchX > rect.width / 2) {
+          jumpTouchExists = true;
+          break;
+        }
+      }
+      if (!jumpTouchExists) {
+        gameState.current.keys.up = false;
+        gameState.current.keys.upPressed = false;
+      }
+    }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white font-sans overflow-hidden touch-none">
+    <div className="fixed inset-0 bg-black text-white font-sans overflow-hidden touch-none flex items-center justify-center">
       {/* Landscape Warning Overlay */}
       <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-6 text-center md:hidden portrait:flex landscape:hidden">
-        <div className="w-20 h-20 border-4 border-white rounded-2xl mb-6 flex items-center justify-center animate-[spin_3s_linear_infinite]">
-          <span className="text-4xl">📱</span>
+        <div className="w-16 h-16 border-4 border-white rounded-2xl mb-4 flex items-center justify-center animate-[spin_3s_linear_infinite]">
+          <span className="text-3xl">📱</span>
         </div>
-        <h2 className="text-lg font-bold mb-2 uppercase tracking-widest">Gira tu pantalla</h2>
-        <p className="text-[10px] text-stone-500 uppercase">Para jugar, usa el modo horizontal</p>
+        <h2 className="text-base font-bold mb-1 uppercase tracking-widest">Gira tu pantalla</h2>
+        <p className="text-[8px] text-stone-500 uppercase">Para jugar, usa el modo horizontal</p>
       </div>
 
+      {/* Game Container: Always 4:3, fits within viewport */}
       <div 
-        className="relative w-full max-w-4xl aspect-video bg-black shadow-[0_0_50px_rgba(0,255,0,0.2)] overflow-hidden border-8 border-stone-800"
+        className="relative w-full h-full max-w-[133.33vh] max-h-[75vw] aspect-[4/3] bg-black shadow-[0_0_100px_rgba(0,255,0,0.1)] overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -982,43 +1302,54 @@ export default function App() {
           ref={canvasRef}
           width={800}
           height={600}
-          className="w-full h-full block"
+          className="w-full h-full block touch-none"
         />
         
-        {/* Game Over Screen */}
+        {/* Mobile Controls Overlay (Visual Only) */}
+        <div className="absolute inset-0 pointer-events-none flex md:hidden opacity-20">
+          <div className="flex-1 border-r border-white/30 flex items-end justify-center pb-8">
+            <span className="text-[4vw] uppercase font-bold tracking-tighter">Mover</span>
+          </div>
+          <div className="flex-1 flex items-end justify-center pb-8">
+            <span className="text-[4vw] uppercase font-bold tracking-tighter">Saltar</span>
+          </div>
+        </div>
+        
+        {/* Game Over Screen - Scaled with container */}
         {gameOver && (
-          <div className="absolute inset-0 bg-black flex flex-col items-center justify-center z-50 p-8 text-center border-[16px] border-double border-white m-4">
-            <h2 className="text-2xl md:text-4xl font-bold text-white mb-8 tracking-widest uppercase">
+          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-50 p-[5%] text-center border-[4px] md:border-[8px] border-double border-white m-[2%]">
+            <h2 className="text-[6vw] md:text-[4vw] font-bold text-white mb-[4%] tracking-widest uppercase">
               GAME OVER
             </h2>
-            <p className="text-lg md:text-xl text-[#fbbf24] mb-6 uppercase animate-float-80s">¡Feliz Cumple Chicho!</p>
-            <p className="text-sm text-stone-400 mb-8 uppercase">16 de marzo 2026</p>
+            <p className="text-[4vw] md:text-[2.5vw] text-[#fbbf24] mb-[3%] uppercase animate-float-80s">¡Feliz Cumple Chicho!</p>
+            <p className="text-[2.5vw] md:text-[1.5vw] text-stone-400 mb-[5%] uppercase">16 de marzo 2026</p>
             
-            <div className="border-4 border-white p-6 mb-8 bg-stone-900">
-              <p className="text-white text-sm md:text-base uppercase">
+            <div className="border-2 md:border-4 border-white p-[3%] mb-[5%] bg-stone-900/80">
+              <p className="text-white text-[3vw] md:text-[2vw] uppercase">
                 SCORE: <span className="text-[#fbbf24]">{score}</span>
               </p>
             </div>
 
-            <p className="text-white text-xs mb-10 animate-pulse uppercase">Te quiero mucho, Lilin.</p>
+            <p className="text-white text-[2vw] md:text-[1.2vw] mb-[6%] animate-pulse uppercase">Te quiero mucho, Lilin.</p>
 
             <button 
               onClick={() => window.location.reload()}
-              className="px-8 py-4 bg-white text-black hover:bg-emerald-400 font-bold text-sm transition-all active:scale-95 border-b-8 border-r-8 border-stone-500 hover:border-emerald-600"
+              className="px-[6%] py-[3%] bg-white text-black hover:bg-emerald-400 font-bold text-[3vw] md:text-[1.5vw] transition-all active:scale-95 border-b-[0.5vw] border-r-[0.5vw] border-stone-500 hover:border-emerald-600 uppercase"
             >
               RETRY
             </button>
           </div>
         )}
         
-        {/* UI Overlay */}
-        <div className="absolute top-4 right-4 flex gap-2 z-10">
+        {/* UI Overlay - Character Selection */}
+        <div className="absolute top-[3%] right-[3%] z-10">
           <button
             onClick={(e) => {
               e.stopPropagation();
+              e.currentTarget.blur();
               toggleCharacter();
             }}
-            className="px-4 py-2 bg-black border-4 border-white hover:bg-stone-800 transition-all text-[10px] font-bold uppercase"
+            className="px-[1.5vw] py-[0.8vw] bg-black/50 border-[0.2vw] border-white/50 hover:bg-white hover:text-black transition-all text-[1.5vw] md:text-[1vw] font-bold uppercase backdrop-blur-sm"
           >
             SELECT: {character === 'Chiara' ? 'BREGO' : 'CHIARA'}
           </button>
