@@ -1253,7 +1253,7 @@ export default function App() {
               e.currentTarget.blur();
               toggleCharacter();
             }}
-            className="px-[1.5vw] py-[0.8vw] bg-black/50 border-[0.2vw] border-white/50 hover:bg-white hover:text-black transition-all text-[1.5vw] lg:text-[1vw] font-bold uppercase backdrop-blur-sm"
+            className="px-[1.5vw] py-[0.8vw] bg-black/50 border-[0.2vw] border-white/50 hover:bg-white hover:text-black transition-all text-[1.5vw] lg:text-[1vw] font-bold uppercase backdrop-blur-sm select-none"
           >
             SELECT: {character === 'Chiara' ? 'BREGO' : 'CHIARA'}
           </button>
@@ -1264,7 +1264,7 @@ export default function App() {
       {/* Mobile Controls in Margins */}
       <div className="fixed left-0 top-0 bottom-0 w-[20%] flex flex-col items-center justify-center gap-16 z-50 lg:hidden pointer-events-none">
         <button 
-          className="w-16 h-16 bg-white/10 border-2 border-white/20 rounded-2xl flex items-center justify-center active:scale-90 active:bg-white/30 transition-all pointer-events-auto"
+          className="w-16 h-16 bg-white/10 border-2 border-white/20 rounded-2xl flex items-center justify-center active:scale-90 active:bg-white/30 transition-all pointer-events-auto select-none touch-none"
           onPointerDown={(e) => { e.preventDefault(); gameState.current.keys.left = true; }}
           onPointerUp={(e) => { e.preventDefault(); gameState.current.keys.left = false; }}
           onPointerLeave={(e) => { e.preventDefault(); gameState.current.keys.left = false; }}
@@ -1272,7 +1272,7 @@ export default function App() {
           <ChevronLeft size={40} />
         </button>
         <button 
-          className="w-16 h-16 bg-white/10 border-2 border-white/20 rounded-2xl flex items-center justify-center active:scale-90 active:bg-white/30 transition-all pointer-events-auto"
+          className="w-16 h-16 bg-white/10 border-2 border-white/20 rounded-2xl flex items-center justify-center active:scale-90 active:bg-white/30 transition-all pointer-events-auto select-none touch-none"
           onPointerDown={(e) => { e.preventDefault(); gameState.current.keys.right = true; }}
           onPointerUp={(e) => { e.preventDefault(); gameState.current.keys.right = false; }}
           onPointerLeave={(e) => { e.preventDefault(); gameState.current.keys.right = false; }}
@@ -1283,7 +1283,7 @@ export default function App() {
 
       <div className="fixed right-0 top-0 bottom-0 w-[20%] flex items-center justify-center z-50 lg:hidden pointer-events-none">
         <button 
-          className="w-20 h-20 bg-white/10 border-2 border-white/20 rounded-full flex items-center justify-center active:scale-90 active:bg-white/30 transition-all pointer-events-auto"
+          className="w-20 h-20 bg-white/10 border-2 border-white/20 rounded-full flex items-center justify-center active:scale-90 active:bg-white/30 transition-all pointer-events-auto select-none touch-none"
           onPointerDown={(e) => { 
             e.preventDefault();
             if (!gameState.current.keys.up) gameState.current.keys.upPressed = true;

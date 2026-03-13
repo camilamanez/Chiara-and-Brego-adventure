@@ -17,4 +17,11 @@ body {
   background-color: #000000;
   overflow: hidden;
   image-rendering: pixelated;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
 }
