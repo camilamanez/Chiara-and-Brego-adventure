@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 // --- Types & Constants ---
 
@@ -94,6 +95,7 @@ const LEVELS: Level[] = [
       { x: 450, y: 150, width: 150, height: 20, color: '#2d5a27', type: 'static' },
       { x: 800, y: 400, width: 200, height: 20, color: '#2d5a27', type: 'horizontal', range: 200, speed: 2, initialX: 800, initialY: 400 },
       { x: 1100, y: 300, width: 150, height: 20, color: '#2d5a27', type: 'vertical', range: 150, speed: 1.5, initialX: 1100, initialY: 300 },
+      { x: 1350, y: 200, width: 150, height: 20, color: '#2d5a27', type: 'static' },
     ],
     bones: [
       { x: 350, y: 420, collected: false },
@@ -104,7 +106,7 @@ const LEVELS: Level[] = [
       { x: 1150, y: 270, collected: false },
     ],
     specialItems: [
-      { x: 1400, y: 500, type: 'steak', collected: false },
+      { x: 1400, y: 170, type: 'steak', collected: false },
     ],
     goal: { x: 1800, y: 500, width: 120, height: 50 }
   },
@@ -172,6 +174,15 @@ export default function App() {
   const [score, setScore] = useState(0);
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [worldTransition, setWorldTransition] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (currentLevelIdx > 0) {
+      setWorldTransition(currentLevelIdx + 1);
+      const timer = setTimeout(() => setWorldTransition(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentLevelIdx]);
 
   // Audio Context for retro sounds
   const audioCtx = useRef<AudioContext | null>(null);
@@ -1218,27 +1229,45 @@ export default function App() {
           height={600}
           className="w-full h-full block touch-none"
         />
+
+        <AnimatePresence>
+          {worldTransition && (
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.5, opacity: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none"
+            >
+              <div className="bg-black/70 px-[6%] py-[3%] border-[0.4vw] lg:border-[0.5vw] border-white backdrop-blur-md shadow-[0_0_50px_rgba(255,255,255,0.2)] max-w-[85%]">
+                <h2 className="text-white text-[4.5vw] lg:text-[4vw] font-bold tracking-[0.2em] lg:tracking-[0.5em] uppercase text-center whitespace-nowrap">
+                  WORLD {worldTransition}
+                </h2>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         {/* Game Over Screen - Scaled with container */}
         {gameOver && (
-          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-50 p-[5%] text-center border-[4px] lg:border-[8px] border-double border-white m-[2%]">
-            <h2 className="text-[6vw] lg:text-[4vw] font-bold text-white mb-[4%] tracking-widest uppercase">
+          <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-50 p-[4%] text-center border-[3px] lg:border-[8px] border-double border-white m-[3%]">
+            <h2 className="text-[5vw] lg:text-[4vw] font-bold text-white mb-[2%] tracking-widest uppercase">
               GAME OVER
             </h2>
-            <p className="text-[4vw] lg:text-[2.5vw] text-[#fbbf24] mb-[3%] uppercase animate-float-80s">¡Feliz Cumple Chicho!</p>
-            <p className="text-[2.5vw] lg:text-[1.5vw] text-stone-400 mb-[5%] uppercase">16 de marzo 2026</p>
+            <p className="text-[3vw] lg:text-[2.5vw] text-[#fbbf24] mb-[2%] uppercase animate-float-80s">¡Feliz Cumple Chicho!</p>
+            <p className="text-[2vw] lg:text-[1.5vw] text-stone-400 mb-[4%] uppercase">16 de marzo 2026</p>
             
-            <div className="border-2 lg:border-4 border-white p-[3%] mb-[5%] bg-stone-900/80">
-              <p className="text-white text-[3vw] lg:text-[2vw] uppercase">
+            <div className="border-2 lg:border-4 border-white p-[2%] mb-[4%] bg-stone-900/80">
+              <p className="text-white text-[2.5vw] lg:text-[2vw] uppercase">
                 SCORE: <span className="text-[#fbbf24]">{score}</span>
               </p>
             </div>
 
-            <p className="text-white text-[2vw] lg:text-[1.2vw] mb-[6%] animate-pulse uppercase">Te quiero mucho, Lilin.</p>
+            <p className="text-white text-[1.8vw] lg:text-[1.2vw] mb-[5%] animate-pulse uppercase">Te quiero mucho, Lilin.</p>
 
             <button 
               onClick={() => window.location.reload()}
-              className="px-[6%] py-[3%] bg-white text-black hover:bg-emerald-400 font-bold text-[3vw] lg:text-[1.5vw] transition-all active:scale-95 border-b-[0.5vw] border-r-[0.5vw] border-stone-500 hover:border-emerald-600 uppercase"
+              className="px-[5%] py-[2%] bg-white text-black hover:bg-emerald-400 font-bold text-[2.5vw] lg:text-[1.5vw] transition-all active:scale-95 border-b-[0.4vw] border-r-[0.4vw] border-stone-500 hover:border-emerald-600 uppercase select-none"
             >
               RETRY
             </button>
