@@ -1288,27 +1288,27 @@ export default function App() {
         
         {/* Game Over Screen - Scaled with container */}
         {gameOver && (
-          <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-[100] p-[5%] text-center border-[3px] lg:border-[8px] border-double border-white m-[1%] sm:m-[3%]">
-            <h2 className="text-[7vw] sm:text-[5vw] lg:text-[4vw] font-bold text-white mb-[2%] tracking-widest uppercase">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] sm:w-[70%] lg:w-[60%] max-h-[90%] bg-black/95 flex flex-col items-center justify-center z-[100] p-[4%] text-center border-[3px] lg:border-[8px] border-double border-white shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+            <h2 className="text-[6vw] sm:text-[5vw] lg:text-[4vw] font-bold text-white mb-[2%] tracking-widest uppercase">
               GAME OVER
             </h2>
-            <p className="text-[4.5vw] sm:text-[3vw] lg:text-[2.5vw] text-[#fbbf24] mb-[2%] uppercase animate-float-80s">¡Feliz Cumple Chicho!</p>
-            <p className="text-[3.5vw] sm:text-[2vw] lg:text-[1.5vw] text-stone-400 mb-[4%] uppercase">16 de marzo 2026</p>
+            <p className="text-[4vw] sm:text-[3vw] lg:text-[2.5vw] text-[#fbbf24] mb-[2%] uppercase animate-float-80s">¡Feliz Cumple Chicho!</p>
+            <p className="text-[3vw] sm:text-[2vw] lg:text-[1.5vw] text-stone-400 mb-[4%] uppercase">16 de marzo 2026</p>
             
             <div className="border-2 lg:border-4 border-white p-[3%] sm:p-[2%] mb-[4%] bg-stone-900/80">
-              <p className="text-white text-[4.5vw] sm:text-[2.5vw] lg:text-[2vw] uppercase">
+              <p className="text-white text-[4vw] sm:text-[2.5vw] lg:text-[2vw] uppercase">
                 SCORE: <span className="text-[#fbbf24]">{score}</span>
               </p>
             </div>
 
-            <p className="text-white text-[3vw] sm:text-[1.8vw] lg:text-[1.2vw] mb-[6%] animate-pulse uppercase">Te quiero mucho, Lilin.</p>
+            <p className="text-white text-[2.5vw] sm:text-[1.8vw] lg:text-[1.2vw] mb-[6%] animate-pulse uppercase">Te quiero mucho, Lilin.</p>
 
             <button 
               onPointerDown={(e) => {
                 e.preventDefault();
                 handleRetry();
               }}
-              className="px-[10%] py-[3%] sm:px-[5%] sm:py-[2%] bg-white text-black hover:bg-emerald-400 font-bold text-[5vw] sm:text-[2.5vw] lg:text-[1.5vw] transition-all active:scale-95 border-b-[0.4vw] border-r-[0.4vw] border-stone-500 hover:border-emerald-600 uppercase select-none cursor-pointer"
+              className="px-[10%] py-[3%] sm:px-[5%] sm:py-[2%] bg-white text-black hover:bg-emerald-400 font-bold text-[4.5vw] sm:text-[2.5vw] lg:text-[1.5vw] transition-all active:scale-95 border-b-[0.4vw] border-r-[0.4vw] border-stone-500 hover:border-emerald-600 uppercase select-none cursor-pointer"
             >
               RETRY
             </button>
