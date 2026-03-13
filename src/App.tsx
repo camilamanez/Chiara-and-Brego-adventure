@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 
 // --- Types & Constants ---
 
@@ -554,7 +555,7 @@ export default function App() {
       }
 
       // Horizontal movement
-      const isMobile = window.innerWidth < 768;
+      const isMobile = window.innerWidth < 1024;
       const accel = stats.speed * (isMobile ? 0.22 : 0.18);
       
       if (distraction.active) {
@@ -1196,94 +1197,10 @@ export default function App() {
     setCharacter(prev => (prev === 'Chiara' ? 'Brego' : 'Chiara'));
   };
 
-  // Mobile controls handlers
-  const touchStartPos = useRef<{ x: number, y: number } | null>(null);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    const rect = e.currentTarget.getBoundingClientRect();
-    const touchX = touch.clientX - rect.left;
-    const isRightSide = touchX > rect.width / 2;
-
-    if (isRightSide) {
-      // Right side is for jumping
-      if (!gameState.current.keys.up) {
-        gameState.current.keys.upPressed = true;
-      }
-      gameState.current.keys.up = true;
-    } else {
-      // Left side is for movement
-      touchStartPos.current = { x: touch.clientX, y: touch.clientY };
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartPos.current) return;
-    const touch = e.touches[0];
-    const dx = touch.clientX - touchStartPos.current.x;
-    
-    // Sensitivity adjustment for mobile
-    const threshold = 15; 
-    if (dx > threshold) {
-      gameState.current.keys.right = true;
-      gameState.current.keys.left = false;
-    } else if (dx < -threshold) {
-      gameState.current.keys.left = true;
-      gameState.current.keys.right = false;
-    } else {
-      gameState.current.keys.left = false;
-      gameState.current.keys.right = false;
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    // If all touches are gone, reset everything
-    if (e.touches.length === 0) {
-      touchStartPos.current = null;
-      gameState.current.keys.left = false;
-      gameState.current.keys.right = false;
-      gameState.current.keys.up = false;
-      gameState.current.keys.upPressed = false;
-    } else {
-      // If some touches remain, check if the movement touch is still there
-      // This is a bit complex with React events, so we'll just check if 
-      // any touch is on the left side. If not, reset movement.
-      let movementTouchExists = false;
-      const rect = e.currentTarget.getBoundingClientRect();
-      for (let i = 0; i < e.touches.length; i++) {
-        const touchX = e.touches[i].clientX - rect.left;
-        if (touchX <= rect.width / 2) {
-          movementTouchExists = true;
-          break;
-        }
-      }
-      
-      if (!movementTouchExists) {
-        touchStartPos.current = null;
-        gameState.current.keys.left = false;
-        gameState.current.keys.right = false;
-      }
-
-      // Check for jump touch
-      let jumpTouchExists = false;
-      for (let i = 0; i < e.touches.length; i++) {
-        const touchX = e.touches[i].clientX - rect.left;
-        if (touchX > rect.width / 2) {
-          jumpTouchExists = true;
-          break;
-        }
-      }
-      if (!jumpTouchExists) {
-        gameState.current.keys.up = false;
-        gameState.current.keys.upPressed = false;
-      }
-    }
-  };
-
   return (
     <div className="fixed inset-0 bg-black text-white font-sans overflow-hidden touch-none flex items-center justify-center">
       {/* Landscape Warning Overlay */}
-      <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-6 text-center md:hidden portrait:flex landscape:hidden">
+      <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-6 text-center lg:hidden portrait:flex landscape:hidden">
         <div className="w-16 h-16 border-4 border-white rounded-2xl mb-4 flex items-center justify-center animate-[spin_3s_linear_infinite]">
           <span className="text-3xl">📱</span>
         </div>
@@ -1294,9 +1211,6 @@ export default function App() {
       {/* Game Container: Always 4:3, fits within viewport */}
       <div 
         className="relative w-full h-full max-w-[133.33vh] max-h-[75vw] aspect-[4/3] bg-black shadow-[0_0_100px_rgba(0,255,0,0.1)] overflow-hidden"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
         <canvas
           ref={canvasRef}
@@ -1305,36 +1219,26 @@ export default function App() {
           className="w-full h-full block touch-none"
         />
         
-        {/* Mobile Controls Overlay (Visual Only) */}
-        <div className="absolute inset-0 pointer-events-none flex md:hidden opacity-20">
-          <div className="flex-1 border-r border-white/30 flex items-end justify-center pb-8">
-            <span className="text-[4vw] uppercase font-bold tracking-tighter">Mover</span>
-          </div>
-          <div className="flex-1 flex items-end justify-center pb-8">
-            <span className="text-[4vw] uppercase font-bold tracking-tighter">Saltar</span>
-          </div>
-        </div>
-        
         {/* Game Over Screen - Scaled with container */}
         {gameOver && (
-          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-50 p-[5%] text-center border-[4px] md:border-[8px] border-double border-white m-[2%]">
-            <h2 className="text-[6vw] md:text-[4vw] font-bold text-white mb-[4%] tracking-widest uppercase">
+          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-50 p-[5%] text-center border-[4px] lg:border-[8px] border-double border-white m-[2%]">
+            <h2 className="text-[6vw] lg:text-[4vw] font-bold text-white mb-[4%] tracking-widest uppercase">
               GAME OVER
             </h2>
-            <p className="text-[4vw] md:text-[2.5vw] text-[#fbbf24] mb-[3%] uppercase animate-float-80s">¡Feliz Cumple Chicho!</p>
-            <p className="text-[2.5vw] md:text-[1.5vw] text-stone-400 mb-[5%] uppercase">16 de marzo 2026</p>
+            <p className="text-[4vw] lg:text-[2.5vw] text-[#fbbf24] mb-[3%] uppercase animate-float-80s">¡Feliz Cumple Chicho!</p>
+            <p className="text-[2.5vw] lg:text-[1.5vw] text-stone-400 mb-[5%] uppercase">16 de marzo 2026</p>
             
-            <div className="border-2 md:border-4 border-white p-[3%] mb-[5%] bg-stone-900/80">
-              <p className="text-white text-[3vw] md:text-[2vw] uppercase">
+            <div className="border-2 lg:border-4 border-white p-[3%] mb-[5%] bg-stone-900/80">
+              <p className="text-white text-[3vw] lg:text-[2vw] uppercase">
                 SCORE: <span className="text-[#fbbf24]">{score}</span>
               </p>
             </div>
 
-            <p className="text-white text-[2vw] md:text-[1.2vw] mb-[6%] animate-pulse uppercase">Te quiero mucho, Lilin.</p>
+            <p className="text-white text-[2vw] lg:text-[1.2vw] mb-[6%] animate-pulse uppercase">Te quiero mucho, Lilin.</p>
 
             <button 
               onClick={() => window.location.reload()}
-              className="px-[6%] py-[3%] bg-white text-black hover:bg-emerald-400 font-bold text-[3vw] md:text-[1.5vw] transition-all active:scale-95 border-b-[0.5vw] border-r-[0.5vw] border-stone-500 hover:border-emerald-600 uppercase"
+              className="px-[6%] py-[3%] bg-white text-black hover:bg-emerald-400 font-bold text-[3vw] lg:text-[1.5vw] transition-all active:scale-95 border-b-[0.5vw] border-r-[0.5vw] border-stone-500 hover:border-emerald-600 uppercase"
             >
               RETRY
             </button>
@@ -1349,12 +1253,55 @@ export default function App() {
               e.currentTarget.blur();
               toggleCharacter();
             }}
-            className="px-[1.5vw] py-[0.8vw] bg-black/50 border-[0.2vw] border-white/50 hover:bg-white hover:text-black transition-all text-[1.5vw] md:text-[1vw] font-bold uppercase backdrop-blur-sm"
+            className="px-[1.5vw] py-[0.8vw] bg-black/50 border-[0.2vw] border-white/50 hover:bg-white hover:text-black transition-all text-[1.5vw] lg:text-[1vw] font-bold uppercase backdrop-blur-sm"
           >
             SELECT: {character === 'Chiara' ? 'BREGO' : 'CHIARA'}
           </button>
         </div>
 
+      </div>
+
+      {/* Mobile Controls in Margins */}
+      <div className="fixed left-0 top-0 bottom-0 w-[20%] flex flex-col items-center justify-center gap-16 z-50 lg:hidden pointer-events-none">
+        <button 
+          className="w-16 h-16 bg-white/10 border-2 border-white/20 rounded-2xl flex items-center justify-center active:scale-90 active:bg-white/30 transition-all pointer-events-auto"
+          onPointerDown={(e) => { e.preventDefault(); gameState.current.keys.left = true; }}
+          onPointerUp={(e) => { e.preventDefault(); gameState.current.keys.left = false; }}
+          onPointerLeave={(e) => { e.preventDefault(); gameState.current.keys.left = false; }}
+        >
+          <ChevronLeft size={40} />
+        </button>
+        <button 
+          className="w-16 h-16 bg-white/10 border-2 border-white/20 rounded-2xl flex items-center justify-center active:scale-90 active:bg-white/30 transition-all pointer-events-auto"
+          onPointerDown={(e) => { e.preventDefault(); gameState.current.keys.right = true; }}
+          onPointerUp={(e) => { e.preventDefault(); gameState.current.keys.right = false; }}
+          onPointerLeave={(e) => { e.preventDefault(); gameState.current.keys.right = false; }}
+        >
+          <ChevronRight size={40} />
+        </button>
+      </div>
+
+      <div className="fixed right-0 top-0 bottom-0 w-[20%] flex items-center justify-center z-50 lg:hidden pointer-events-none">
+        <button 
+          className="w-20 h-20 bg-white/10 border-2 border-white/20 rounded-full flex items-center justify-center active:scale-90 active:bg-white/30 transition-all pointer-events-auto"
+          onPointerDown={(e) => { 
+            e.preventDefault();
+            if (!gameState.current.keys.up) gameState.current.keys.upPressed = true;
+            gameState.current.keys.up = true;
+          }}
+          onPointerUp={(e) => { 
+            e.preventDefault();
+            gameState.current.keys.up = false;
+            gameState.current.keys.upPressed = false;
+          }}
+          onPointerLeave={(e) => { 
+            e.preventDefault();
+            gameState.current.keys.up = false;
+            gameState.current.keys.upPressed = false;
+          }}
+        >
+          <ChevronUp size={48} />
+        </button>
       </div>
     </div>
   );
