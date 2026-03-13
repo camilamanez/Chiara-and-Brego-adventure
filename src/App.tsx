@@ -1286,32 +1286,43 @@ export default function App() {
           )}
         </AnimatePresence>
         
-        {/* Game Over Screen - Scaled with container */}
+        {/* Game Over Screen - Fully Responsive & Adaptive */}
         {gameOver && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] sm:w-[70%] lg:w-[60%] max-h-[90%] bg-black/95 flex flex-col items-center justify-center z-[100] p-[4%] text-center border-[3px] lg:border-[8px] border-double border-white shadow-[0_0_100px_rgba(0,0,0,0.5)]">
-            <h2 className="text-[6vw] sm:text-[5vw] lg:text-[4vw] font-bold text-white mb-[2%] tracking-widest uppercase">
-              GAME OVER
-            </h2>
-            <p className="text-[4vw] sm:text-[3vw] lg:text-[2.5vw] text-[#fbbf24] mb-[2%] uppercase animate-float-80s">¡Feliz Cumple Chicho!</p>
-            <p className="text-[3vw] sm:text-[2vw] lg:text-[1.5vw] text-stone-400 mb-[4%] uppercase">16 de marzo 2026</p>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-[320px] bg-black/95 flex flex-col items-center justify-center z-[100] p-6 text-center border-[2px] lg:border-[6px] border-double border-white shadow-[0_0_80px_rgba(0,0,0,0.9)] rounded-sm gap-4">
+            <div className="flex flex-col items-center gap-1 w-full">
+              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-widest uppercase leading-tight break-words w-full">
+                GAME OVER
+              </h2>
+              <div className="h-[1px] w-12 bg-white/20 my-1" />
+              <p className="text-base sm:text-lg text-[#fbbf24] uppercase font-bold leading-tight break-words w-full">
+                ¡Feliz Cumple Chicho!
+              </p>
+              <p className="text-[10px] sm:text-xs text-stone-400 uppercase tracking-widest opacity-80">
+                16 de marzo 2026
+              </p>
+            </div>
             
-            <div className="border-2 lg:border-4 border-white p-[3%] sm:p-[2%] mb-[4%] bg-stone-900/80">
-              <p className="text-white text-[4vw] sm:text-[2.5vw] lg:text-[2vw] uppercase">
-                SCORE: <span className="text-[#fbbf24]">{score}</span>
+            <div className="border-[1px] border-white/20 p-2 bg-stone-900/40 w-full max-w-[200px]">
+              <p className="text-white text-xs sm:text-sm uppercase tracking-widest">
+                SCORE: <span className="text-[#fbbf24] font-bold">{score}</span>
               </p>
             </div>
 
-            <p className="text-white text-[2.5vw] sm:text-[1.8vw] lg:text-[1.2vw] mb-[6%] animate-pulse uppercase">Te quiero mucho, Lilin.</p>
+            <div className="flex flex-col items-center gap-3 w-full">
+              <p className="text-[10px] sm:text-xs text-white animate-pulse uppercase tracking-tight opacity-60 break-words w-full">
+                Te quiero mucho, Lilin.
+              </p>
 
-            <button 
-              onPointerDown={(e) => {
-                e.preventDefault();
-                handleRetry();
-              }}
-              className="px-[10%] py-[3%] sm:px-[5%] sm:py-[2%] bg-white text-black hover:bg-emerald-400 font-bold text-[4.5vw] sm:text-[2.5vw] lg:text-[1.5vw] transition-all active:scale-95 border-b-[0.4vw] border-r-[0.4vw] border-stone-500 hover:border-emerald-600 uppercase select-none cursor-pointer"
-            >
-              RETRY
-            </button>
+              <button 
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  handleRetry();
+                }}
+                className="w-full max-w-[100px] py-2 bg-white text-black hover:bg-emerald-400 font-bold text-xs sm:text-sm transition-all active:scale-95 border-b-[3px] border-r-[3px] border-stone-400 hover:border-emerald-600 uppercase select-none cursor-pointer"
+              >
+                RETRY
+              </button>
+            </div>
           </div>
         )}
         
