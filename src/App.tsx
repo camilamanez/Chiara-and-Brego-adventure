@@ -176,6 +176,44 @@ export default function App() {
   const [gameOver, setGameOver] = useState(false);
   const [worldTransition, setWorldTransition] = useState<number | null>(null);
 
+  const handleRetry = () => {
+    setGameOver(false);
+    setScore(0);
+    setCurrentLevelIdx(0);
+    
+    // Reset game state ref
+    const level = LEVELS[0];
+    gameState.current.player = {
+      x: 50,
+      y: 300,
+      vx: 0,
+      vy: 0,
+      width: STATS[character].width,
+      height: STATS[character].height,
+      grounded: false,
+      jumpCount: 0,
+    };
+    gameState.current.keys = {
+      left: false,
+      right: false,
+      up: false,
+      upPressed: false,
+    };
+    gameState.current.platforms = JSON.parse(JSON.stringify(level.platforms));
+    gameState.current.bones = JSON.parse(JSON.stringify(level.bones));
+    gameState.current.specialItems = JSON.parse(JSON.stringify(level.specialItems));
+    gameState.current.goal = { ...level.goal };
+    gameState.current.currentLevelIdx = 0;
+    gameState.current.score = 0;
+    gameState.current.cameraX = 0;
+    gameState.current.levelTimer = 0;
+    gameState.current.goalAnimation = { active: false, timer: 0, driveOff: 0, exhaust: [] };
+    gameState.current.victoryAnimation = { active: false, timer: 0, otherDogX: 0, otherDogY: 0, otherDogVy: 0, soundCount: 0 };
+    gameState.current.tennisBalls = [];
+    gameState.current.distraction = { active: false, timer: 0, direction: 0 };
+    gameState.current.floatingTexts = [];
+  };
+
   useEffect(() => {
     if (currentLevelIdx > 0) {
       setWorldTransition(currentLevelIdx + 1);
@@ -1250,24 +1288,27 @@ export default function App() {
         
         {/* Game Over Screen - Scaled with container */}
         {gameOver && (
-          <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-50 p-[4%] text-center border-[3px] lg:border-[8px] border-double border-white m-[3%]">
-            <h2 className="text-[5vw] lg:text-[4vw] font-bold text-white mb-[2%] tracking-widest uppercase">
+          <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-[100] p-[5%] text-center border-[3px] lg:border-[8px] border-double border-white m-[1%] sm:m-[3%]">
+            <h2 className="text-[7vw] sm:text-[5vw] lg:text-[4vw] font-bold text-white mb-[2%] tracking-widest uppercase">
               GAME OVER
             </h2>
-            <p className="text-[3vw] lg:text-[2.5vw] text-[#fbbf24] mb-[2%] uppercase animate-float-80s">¡Feliz Cumple Chicho!</p>
-            <p className="text-[2vw] lg:text-[1.5vw] text-stone-400 mb-[4%] uppercase">16 de marzo 2026</p>
+            <p className="text-[4.5vw] sm:text-[3vw] lg:text-[2.5vw] text-[#fbbf24] mb-[2%] uppercase animate-float-80s">¡Feliz Cumple Chicho!</p>
+            <p className="text-[3.5vw] sm:text-[2vw] lg:text-[1.5vw] text-stone-400 mb-[4%] uppercase">16 de marzo 2026</p>
             
-            <div className="border-2 lg:border-4 border-white p-[2%] mb-[4%] bg-stone-900/80">
-              <p className="text-white text-[2.5vw] lg:text-[2vw] uppercase">
+            <div className="border-2 lg:border-4 border-white p-[3%] sm:p-[2%] mb-[4%] bg-stone-900/80">
+              <p className="text-white text-[4.5vw] sm:text-[2.5vw] lg:text-[2vw] uppercase">
                 SCORE: <span className="text-[#fbbf24]">{score}</span>
               </p>
             </div>
 
-            <p className="text-white text-[1.8vw] lg:text-[1.2vw] mb-[5%] animate-pulse uppercase">Te quiero mucho, Lilin.</p>
+            <p className="text-white text-[3vw] sm:text-[1.8vw] lg:text-[1.2vw] mb-[6%] animate-pulse uppercase">Te quiero mucho, Lilin.</p>
 
             <button 
-              onClick={() => window.location.reload()}
-              className="px-[5%] py-[2%] bg-white text-black hover:bg-emerald-400 font-bold text-[2.5vw] lg:text-[1.5vw] transition-all active:scale-95 border-b-[0.4vw] border-r-[0.4vw] border-stone-500 hover:border-emerald-600 uppercase select-none"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                handleRetry();
+              }}
+              className="px-[10%] py-[3%] sm:px-[5%] sm:py-[2%] bg-white text-black hover:bg-emerald-400 font-bold text-[5vw] sm:text-[2.5vw] lg:text-[1.5vw] transition-all active:scale-95 border-b-[0.4vw] border-r-[0.4vw] border-stone-500 hover:border-emerald-600 uppercase select-none cursor-pointer"
             >
               RETRY
             </button>
